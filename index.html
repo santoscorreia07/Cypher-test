@@ -1,1 +1,370 @@
-# Cypher-test
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CYPHER NET - Central de Controlo Firebase</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0b0d14;
+  --surface: #141722;
+  --border: #232738;
+  --accent: #00e5ff;
+  --accent-glow: rgba(0, 229, 255, 0.15);
+  --green: #10b981;
+  --red: #ef4444;
+  --text: #e2e8f0;
+  --muted: #64748b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: 0.5px; }
+.status-pill {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--green);
+  border: 1px solid var(--green);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--surface);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 10px 0;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.panel.active { display: block; }
+
+.panel-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+.group { margin-bottom: 12px; }
+label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+input, textarea {
+  width: 100%;
+  background: #1a1e2d;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 80px; }
+
+.btn-action {
+  width: 100%;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.log-box {
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  display: none;
+  word-break: break-all;
+}
+.log-box.ok { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--green); color: var(--green); }
+.log-box.err { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="brand">⬡ CYPHER NET</div>
+    <div class="status-pill">ONLINE</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('pushTab', this)">NOTIFICAÇÕES</button>
+    <button class="tab-btn" onclick="switchTab('dbTab', this)">FIRESTORE</button>
+    <button class="tab-btn" onclick="switchTab('infoTab', this)">CONTA</button>
+  </div>
+
+  <!-- MÓDULO 1: Notificações Push -->
+  <div id="pushTab" class="panel active">
+    <div class="panel-title">Enviar Notificação Push (FCM v1)</div>
+    <div class="group">
+      <label>Título</label>
+      <input type="text" id="notifTitle" value="CYPHER NET ATUALIZADA!">
+    </div>
+    <div class="group">
+      <label>Mensagem</label>
+      <textarea id="notifBody">Novos servidores de alta velocidade adicionados. Conecta já!</textarea>
+    </div>
+    <div class="group">
+      <label>Tópico</label>
+      <input type="text" id="notifTopic" value="all">
+    </div>
+    <button class="btn-action" id="sendPushBtn" onclick="handleSendPush()">DISPARAR NOTIFICAÇÃO</button>
+    <div id="pushLog" class="log-box"></div>
+  </div>
+
+  <!-- MÓDULO 2: Firestore Database -->
+  <div id="dbTab" class="panel">
+    <div class="panel-title">Consultar Coleção Firestore</div>
+    <div class="group">
+      <label>Nome da Coleção</label>
+      <input type="text" id="collName" value="servers" placeholder="ex: users, servers">
+    </div>
+    <button class="btn-action" id="readDbBtn" onclick="handleReadFirestore()">LER DADOS</button>
+    <div id="dbLog" class="log-box"></div>
+  </div>
+
+  <!-- MÓDULO 3: Informações -->
+  <div id="infoTab" class="panel">
+    <div class="panel-title">Detalhes da Service Account</div>
+    <div class="group"><label>PROJECT ID</label><input type="text" value="cypher-net-d759e" readonly></div>
+    <div class="group"><label>CLIENT EMAIL</label><input type="text" value="firebase-adminsdk-fbsvc@cypher-net-d759e.iam.gserviceaccount.com" readonly></div>
+  </div>
+</div>
+
+<script>
+const SA = {
+  project_id: "cypher-net-d759e",
+  client_email: "firebase-adminsdk-fbsvc@cypher-net-d759e.iam.gserviceaccount.com",
+  private_key: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDZBoLdERAjTj8s
+6c0vxG2qtBf9s7oBVJM75ujMlePxEwdLHzRCJjyw78Y2tiSUVwr4k2HzViYs7Aey
+1Zec8vdpALwgfZZEO+6GxdqRq9b6FSK0cIIg4t0CJV8kk7gkkfv8DUkQMcQ3sFY6
+IHfL9pNsnfGHAuog1n1Z/tRJXjWulnlNC3WkvKS0JlQlF3OzuzHaIdyzbJGa1Znb
+6iz6K04a3YjPZbSdWSADg+b/sWHgwwDxFqPFaE4WvFNTGd5nzLIxF3D2p9NL8y0Y
+tM8wK58kfi5p0hvlA9AHnjA3B/dpQ2j9ABd+tzAV0R4I1uqPW+GXyBvHXtWS/4Dj
+h0bH8b6DAgMBAAECggEABbv161NJs7Q4ZhrmPfLqqG/U9VW4aQyzFMMoaS/fIciT
+nbV5ta+Mhh7lJsLp+v+6jR4QAgdLV9Co8lvLJepLAp8GKKL+cSmtc9xxRv7dA53vn
+JVgkyPKpIpjE94JjdR4hOXy8mU3i4IRAohuK9Bu7COhF4iqDtwr1kNIeCbNXmW9W
+e9AxT3UMqKKVZ7IO+1fGBZZ1CBZh2xRVAtzE2QhebB3lxTKB1/QupknAJxgX5g7n
+8kkusvbUMrf/o4f0ZXJCHhJCBN+l/+emfmVu9A6W2okNOmSQbYMFA+5exeuZuJOe
+jIAVx3CIYDqD+25hvzAvO0SgkFz/bHfssJ1eGRlXMQKBgQDv/BiKdyDuzt52brvF
+nz3t3kS+R2WbANVbzTo1Jh0gdRSXxG3hjiTEm+V/BNQAy7XKH5l2eG53TQJg+Ye5r
+1n7dS2gs8JulQWZA1DjdDZ0ChVD8NuHNXE0vraPROSQcp0nwSRTBPFg3/MyNyIj0
+3ToiFB1HnF4kp6I8z7ySrsle8wKBgQDngi2NLfc45zU3SUhmrjePHJ0+GRjbRkXb
+1f4b4PZ5WAf8Ce2sC/J/SkslFXAPsWHeLTUtKfagfMSIdSS5LwRz8Jw9FJOm8wnN
+9jjoFVXpiYg3xppwT/FUuPtLKboFEBTzdy/V5fmDVPMnK4dR1qy4eW4GqA6tTWVb
+dGmj6BemMQKBgHOk2rqWz4LkoyUVFV0sL4Ydq3uv9Ki4y26xsrn0+9ZHBRKbtzbX
+3Jy4XOFAxhjEfYVpiEFxc2tiXDrrfDXxBe9jsA6/33ESA9FHsyMqtTeKwMzZMZSB
+XxyTozZmP7WjE6k7vkmj56sLIhNMyFqe5K2ZXcatXlxxf2eof2l72sPrAoGARxZ2
+Hk/rBhIZCSz7imwcq1lB/3t9Ynelo+eF69GcXY5mhUIXNSlGAUgy4uQ+UNNLFgoT
+thaYoJcvUieGa0bAu0k68JaM8ErYy+G7f6hthRSyO05ExhAGLtnOcDoT4NIbXNdQ
+nXQINKALB11lKaBrfVpYS7wBT4WtOoFKSzb3K5UECgYEA6hBRoYkzaCJKGaIrG4If
+0TEfj28Qvg2KiRKEJ6rD6QPky7PZjnA3wXMZe4TCUVXgQGgpV2pecIK9JnaJ26NG
+nurHprR0QV3TS6nC9oV19CYZnppIeA4mlLJcWDUGgUArXkz9n2TlW7pHSgA0JmIiB
+tUrgD0W0WCP64ewdH7RqzrA=
+-----END PRIVATE KEY-----`
+};
+
+function switchTab(tabId, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  el.classList.add('active');
+}
+
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+const b64uStr = (str) => b64u(new TextEncoder().encode(str));
+
+async function getAccessToken(scopes) {
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64uStr(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claim = b64uStr(JSON.stringify({
+    iss: SA.client_email,
+    scope: scopes.join(" "),
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600
+  }));
+
+  const signInput = `${head}.${claim}`;
+  const pemHeader = "-----BEGIN PRIVATE KEY-----";
+  const pemFooter = "-----END PRIVATE KEY-----";
+  let pemContents = SA.private_key.replace(pemHeader, "").replace(pemFooter, "").replace(/\s+/g, "");
+  const binaryDerString = atob(pemContents);
+  const binaryDer = new Uint8Array(binaryDerString.length);
+  for (let i = 0; i < binaryDerString.length; i++) binaryDer[i] = binaryDerString.charCodeAt(i);
+
+  const key = await window.crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer.buffer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await window.crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(signInput)
+  );
+
+  const jwt = `${signInput}.${b64u(signature)}`;
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt
+    })
+  });
+
+  const json = await res.json();
+  if (!res.ok || !json.access_token) throw new Error(json.error_description || json.error || "Erro no OAuth2");
+  return json.access_token;
+}
+
+async function handleSendPush() {
+  const btn = document.getElementById('sendPushBtn');
+  const log = document.getElementById('pushLog');
+  const title = document.getElementById('notifTitle').value.trim();
+  const body = document.getElementById('notifBody').value.trim();
+  const topic = document.getElementById('notifTopic').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = "A Enviar...";
+  log.style.display = "none";
+
+  try {
+    const token = await getAccessToken(["https://www.googleapis.com/auth/firebase.messaging"]);
+    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${SA.project_id}/messages:send`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: {
+          notification: { title, body },
+          data: { TITLE: title, BODY: body },
+          android: { priority: "HIGH" },
+          topic: topic
+        }
+      })
+    });
+
+    const json = await res.json();
+    log.style.display = "block";
+    if (res.ok) {
+      log.className = "log-box ok";
+      log.textContent = "✓ Notificação enviada com sucesso!";
+    } else {
+      log.className = "log-box err";
+      log.textContent = "⚠️ Erro: " + (json.error?.message || JSON.stringify(json));
+    }
+  } catch (err) {
+    log.style.display = "block";
+    log.className = "log-box err";
+    log.textContent = "⚠️ Erro: " + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "DISPARAR NOTIFICAÇÃO";
+  }
+}
+
+async function handleReadFirestore() {
+  const btn = document.getElementById('readDbBtn');
+  const log = document.getElementById('dbLog');
+  const collection = document.getElementById('collName').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = "A Aceder...";
+  log.style.display = "none";
+
+  try {
+    const token = await getAccessToken(["https://www.googleapis.com/auth/datastore"]);
+    const res = await fetch(`https://firestore.googleapis.com/v1/projects/${SA.project_id}/databases/(default)/documents/${collection}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const json = await res.json();
+    log.style.display = "block";
+    if (res.ok) {
+      log.className = "log-box ok";
+      log.textContent = JSON.stringify(json, null, 2);
+    } else {
+      log.className = "log-box err";
+      log.textContent = "⚠️ Erro: " + (json.error?.message || JSON.stringify(json));
+    }
+  } catch (err) {
+    log.style.display = "block";
+    log.className = "log-box err";
+    log.textContent = "⚠️ Erro: " + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "LER DADOS";
+  }
+}
+</script>
+</body>
+</html>
+
