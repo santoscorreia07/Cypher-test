@@ -1,370 +1,493 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CYPHER NET - Central de Controlo Firebase</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Santos | Cypher Hub & Projectos</title>
+    <!-- Fontes modernas do Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Ícones FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #090b10;
+            --card-bg: rgba(20, 25, 38, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(30, 38, 56, 0.9);
+            --primary: #00f0ff;
+            --secondary: #7000ff;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
 
-:root {
-  --bg: #0b0d14;
-  --surface: #141722;
-  --border: #232738;
-  --accent: #00e5ff;
-  --accent-glow: rgba(0, 229, 255, 0.15);
-  --green: #10b981;
-  --red: #ef4444;
-  --text: #e2e8f0;
-  --muted: #64748b;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  padding: 16px;
-  display: flex;
-  justify-content: center;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-.container {
-  width: 100%;
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+        /* Luzes de fundo animadas */
+        .bg-glow {
+            position: fixed;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            filter: blur(110px);
+            z-index: -1;
+            opacity: 0.45;
+            pointer-events: none;
+        }
 
-.header {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.brand { font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: 0.5px; }
-.status-pill {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--green);
-  border: 1px solid var(--green);
-  font-family: 'JetBrains Mono', monospace;
-}
+        .glow-1 {
+            top: -80px;
+            left: -80px;
+            background: var(--secondary);
+            animation: float 8s ease-in-out infinite alternate;
+        }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  background: var(--surface);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-.tab-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  padding: 10px 0;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.tab-btn.active {
-  background: var(--accent-glow);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-}
+        .glow-2 {
+            bottom: -80px;
+            right: -80px;
+            background: var(--primary);
+            animation: float 10s ease-in-out infinite alternate-reverse;
+        }
 
-.panel {
-  display: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
-}
-.panel.active { display: block; }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 40px) scale(1.1); }
+        }
 
-.panel-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
-.group { margin-bottom: 12px; }
-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
-input, textarea {
-  width: 100%;
-  background: #1a1e2d;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: #fff;
-  padding: 10px;
-  font-size: 13px;
-  outline: none;
-  font-family: inherit;
-}
-input:focus, textarea:focus { border-color: var(--accent); }
-textarea { resize: vertical; min-height: 80px; }
+        /* Container Principal */
+        .container {
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
 
-.btn-action {
-  width: 100%;
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  margin-top: 8px;
-}
-.btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Botão de Partilha no topo */
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
 
-.log-box {
-  margin-top: 14px;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  display: none;
-  word-break: break-all;
-}
-.log-box.ok { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--green); color: var(--green); }
-.log-box.err { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red); color: var(--red); }
-</style>
+        .share-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+        }
+
+        .share-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* Cabeçalho do Perfil */
+        .profile {
+            text-align: center;
+            margin-bottom: 28px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 104px;
+            height: 104px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #111622;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            overflow: hidden;
+        }
+
+        /* Se quiseres colocar uma foto real depois, basta usar <img src="sua-foto.jpg" class="avatar"> */
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-verified {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: #0ea5e9;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border: 2px solid var(--bg-dark);
+        }
+
+        .profile h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        .profile p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.45;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+
+        /* Secções de Links */
+        .section-title {
+            width: 100%;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin: 14px 0 10px 4px;
+            font-weight: 600;
+        }
+
+        .links-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Cartão de Link */
+        .link-card {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-main);
+            backdrop-filter: blur(14px);
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .link-card:nth-child(1) { animation-delay: 0.1s; }
+        .link-card:nth-child(2) { animation-delay: 0.2s; }
+        .link-card:nth-child(3) { animation-delay: 0.3s; }
+        .link-card:nth-child(4) { animation-delay: 0.4s; }
+        .link-card:nth-child(5) { animation-delay: 0.5s; }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            background: var(--card-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .link-card:active {
+            transform: scale(0.98);
+        }
+
+        /* Destaque especial para a IA */
+        .link-card.featured {
+            border: 1px solid rgba(0, 240, 255, 0.35);
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(112, 0, 255, 0.08));
+        }
+
+        .link-card.featured:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        .icon-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Cores individuais dos ícones */
+        .icon-ai { background: rgba(0, 240, 255, 0.15); color: #00f0ff; }
+        .icon-store { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+        .icon-whatsapp { background: rgba(37, 211, 102, 0.15); color: #25d366; }
+        .icon-youtube { background: rgba(255, 0, 0, 0.15); color: #ff3b3b; }
+        .icon-facebook { background: rgba(24, 119, 242, 0.15); color: #3b82f6; }
+
+        .link-info {
+            flex: 1;
+        }
+
+        .link-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-new {
+            font-size: 0.65rem;
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .link-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .arrow-icon {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: transform 0.25s ease, color 0.25s ease;
+        }
+
+        .link-card:hover .arrow-icon {
+            transform: translateX(4px);
+            color: var(--text-main);
+        }
+
+        /* Rodapé */
+        footer {
+            margin-top: 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Notificação Toast ao copiar link */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid var(--primary);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <div class="brand">⬡ CYPHER NET</div>
-    <div class="status-pill">ONLINE</div>
-  </div>
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('pushTab', this)">NOTIFICAÇÕES</button>
-    <button class="tab-btn" onclick="switchTab('dbTab', this)">FIRESTORE</button>
-    <button class="tab-btn" onclick="switchTab('infoTab', this)">CONTA</button>
-  </div>
+    <main class="container">
+        <!-- Botão de Partilhar -->
+        <div class="top-bar">
+            <button class="share-btn" onclick="sharePage()" title="Partilhar página">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
+        </div>
 
-  <!-- MÓDULO 1: Notificações Push -->
-  <div id="pushTab" class="panel active">
-    <div class="panel-title">Enviar Notificação Push (FCM v1)</div>
-    <div class="group">
-      <label>Título</label>
-      <input type="text" id="notifTitle" value="CYPHER NET ATUALIZADA!">
-    </div>
-    <div class="group">
-      <label>Mensagem</label>
-      <textarea id="notifBody">Novos servidores de alta velocidade adicionados. Conecta já!</textarea>
-    </div>
-    <div class="group">
-      <label>Tópico</label>
-      <input type="text" id="notifTopic" value="all">
-    </div>
-    <button class="btn-action" id="sendPushBtn" onclick="handleSendPush()">DISPARAR NOTIFICAÇÃO</button>
-    <div id="pushLog" class="log-box"></div>
-  </div>
+        <!-- Perfil -->
+        <header class="profile">
+            <div class="avatar-wrapper">
+                <div class="avatar">
+                    <!-- Podes substituir o texto "CY" por uma imagem: <img src="logo.png" alt="Logo"> -->
+                    CY
+                </div>
+                <div class="badge-verified" title="Criador Oficial">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+            <h1>Santos | Cypher Hub</h1>
+            <p>Desenvolvimento Web, Inteligência Artificial, Apps & Conteúdo Digital.</p>
+        </header>
 
-  <!-- MÓDULO 2: Firestore Database -->
-  <div id="dbTab" class="panel">
-    <div class="panel-title">Consultar Coleção Firestore</div>
-    <div class="group">
-      <label>Nome da Coleção</label>
-      <input type="text" id="collName" value="servers" placeholder="ex: users, servers">
-    </div>
-    <button class="btn-action" id="readDbBtn" onclick="handleReadFirestore()">LER DADOS</button>
-    <div id="dbLog" class="log-box"></div>
-  </div>
+        <!-- Secção: Projectos -->
+        <div class="section-title">Meus Projectos</div>
+        <div class="links-list">
+            
+            <!-- Cypher AI -->
+            <a href="https://cypher-ai-sigma.vercel.app/" target="_blank" rel="noopener noreferrer" class="link-card featured">
+                <div class="icon-box icon-ai">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-title">
+                        Cypher AI
+                        <span class="tag-new">IA</span>
+                    </div>
+                    <div class="link-desc">Experimenta a minha Inteligência Artificial</div>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
 
-  <!-- MÓDULO 3: Informações -->
-  <div id="infoTab" class="panel">
-    <div class="panel-title">Detalhes da Service Account</div>
-    <div class="group"><label>PROJECT ID</label><input type="text" value="cypher-net-d759e" readonly></div>
-    <div class="group"><label>CLIENT EMAIL</label><input type="text" value="firebase-adminsdk-fbsvc@cypher-net-d759e.iam.gserviceaccount.com" readonly></div>
-  </div>
-</div>
+            <!-- Loja de Aplicativos -->
+            <a href="https://cypher-site-taupe.vercel.app/" target="_blank" rel="noopener noreferrer" class="link-card">
+                <div class="icon-box icon-store">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-title">Cypher App Store</div>
+                    <div class="link-desc">Baixa os meus aplicativos gratuitamente</div>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
 
-<script>
-const SA = {
-  project_id: "cypher-net-d759e",
-  client_email: "firebase-adminsdk-fbsvc@cypher-net-d759e.iam.gserviceaccount.com",
-  private_key: `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDZBoLdERAjTj8s
-6c0vxG2qtBf9s7oBVJM75ujMlePxEwdLHzRCJjyw78Y2tiSUVwr4k2HzViYs7Aey
-1Zec8vdpALwgfZZEO+6GxdqRq9b6FSK0cIIg4t0CJV8kk7gkkfv8DUkQMcQ3sFY6
-IHfL9pNsnfGHAuog1n1Z/tRJXjWulnlNC3WkvKS0JlQlF3OzuzHaIdyzbJGa1Znb
-6iz6K04a3YjPZbSdWSADg+b/sWHgwwDxFqPFaE4WvFNTGd5nzLIxF3D2p9NL8y0Y
-tM8wK58kfi5p0hvlA9AHnjA3B/dpQ2j9ABd+tzAV0R4I1uqPW+GXyBvHXtWS/4Dj
-h0bH8b6DAgMBAAECggEABbv161NJs7Q4ZhrmPfLqqG/U9VW4aQyzFMMoaS/fIciT
-nbV5ta+Mhh7lJsLp+v+6jR4QAgdLV9Co8lvLJepLAp8GKKL+cSmtc9xxRv7dA53vn
-JVgkyPKpIpjE94JjdR4hOXy8mU3i4IRAohuK9Bu7COhF4iqDtwr1kNIeCbNXmW9W
-e9AxT3UMqKKVZ7IO+1fGBZZ1CBZh2xRVAtzE2QhebB3lxTKB1/QupknAJxgX5g7n
-8kkusvbUMrf/o4f0ZXJCHhJCBN+l/+emfmVu9A6W2okNOmSQbYMFA+5exeuZuJOe
-jIAVx3CIYDqD+25hvzAvO0SgkFz/bHfssJ1eGRlXMQKBgQDv/BiKdyDuzt52brvF
-nz3t3kS+R2WbANVbzTo1Jh0gdRSXxG3hjiTEm+V/BNQAy7XKH5l2eG53TQJg+Ye5r
-1n7dS2gs8JulQWZA1DjdDZ0ChVD8NuHNXE0vraPROSQcp0nwSRTBPFg3/MyNyIj0
-3ToiFB1HnF4kp6I8z7ySrsle8wKBgQDngi2NLfc45zU3SUhmrjePHJ0+GRjbRkXb
-1f4b4PZ5WAf8Ce2sC/J/SkslFXAPsWHeLTUtKfagfMSIdSS5LwRz8Jw9FJOm8wnN
-9jjoFVXpiYg3xppwT/FUuPtLKboFEBTzdy/V5fmDVPMnK4dR1qy4eW4GqA6tTWVb
-dGmj6BemMQKBgHOk2rqWz4LkoyUVFV0sL4Ydq3uv9Ki4y26xsrn0+9ZHBRKbtzbX
-3Jy4XOFAxhjEfYVpiEFxc2tiXDrrfDXxBe9jsA6/33ESA9FHsyMqtTeKwMzZMZSB
-XxyTozZmP7WjE6k7vkmj56sLIhNMyFqe5K2ZXcatXlxxf2eof2l72sPrAoGARxZ2
-Hk/rBhIZCSz7imwcq1lB/3t9Ynelo+eF69GcXY5mhUIXNSlGAUgy4uQ+UNNLFgoT
-thaYoJcvUieGa0bAu0k68JaM8ErYy+G7f6hthRSyO05ExhAGLtnOcDoT4NIbXNdQ
-nXQINKALB11lKaBrfVpYS7wBT4WtOoFKSzb3K5UECgYEA6hBRoYkzaCJKGaIrG4If
-0TEfj28Qvg2KiRKEJ6rD6QPky7PZjnA3wXMZe4TCUVXgQGgpV2pecIK9JnaJ26NG
-nurHprR0QV3TS6nC9oV19CYZnppIeA4mlLJcWDUGgUArXkz9n2TlW7pHSgA0JmIiB
-tUrgD0W0WCP64ewdH7RqzrA=
------END PRIVATE KEY-----`
-};
+        </div>
 
-function switchTab(tabId, el) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  el.classList.add('active');
-}
+        <!-- Secção: Comunidade & Redes Sociais -->
+        <div class="section-title">Comunidade & Redes Sociais</div>
+        <div class="links-list">
 
-const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-const b64uStr = (str) => b64u(new TextEncoder().encode(str));
+            <!-- Canal do WhatsApp -->
+            <a href="https://whatsapp.com/channel/0029Vb6uL7E1yT1zYC3iPw11" target="_blank" rel="noopener noreferrer" class="link-card">
+                <div class="icon-box icon-whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-title">Canal Oficial no WhatsApp</div>
+                    <div class="link-desc">Novidades, actualizações e ficheiros em 1ª mão</div>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
 
-async function getAccessToken(scopes) {
-  const now = Math.floor(Date.now() / 1000);
-  const head = b64uStr(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claim = b64uStr(JSON.stringify({
-    iss: SA.client_email,
-    scope: scopes.join(" "),
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600
-  }));
+            <!-- YouTube -->
+            <a href="https://www.youtube.com/@Santisboy_Tuber" target="_blank" rel="noopener noreferrer" class="link-card">
+                <div class="icon-box icon-youtube">
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-title">Santisboy Tuber</div>
+                    <div class="link-desc">Tutoriais, projectos e vídeos no YouTube</div>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
 
-  const signInput = `${head}.${claim}`;
-  const pemHeader = "-----BEGIN PRIVATE KEY-----";
-  const pemFooter = "-----END PRIVATE KEY-----";
-  let pemContents = SA.private_key.replace(pemHeader, "").replace(pemFooter, "").replace(/\s+/g, "");
-  const binaryDerString = atob(pemContents);
-  const binaryDer = new Uint8Array(binaryDerString.length);
-  for (let i = 0; i < binaryDerString.length; i++) binaryDer[i] = binaryDerString.charCodeAt(i);
+            <!-- Facebook -->
+            <a href="https://www.facebook.com/profile.php?id=100069311973553" target="_blank" rel="noopener noreferrer" class="link-card">
+                <div class="icon-box icon-facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-title">Página no Facebook</div>
+                    <div class="link-desc">Acompanha as publicações e novidades</div>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
 
-  const key = await window.crypto.subtle.importKey(
-    "pkcs8",
-    binaryDer.buffer,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
+        </div>
 
-  const signature = await window.crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    new TextEncoder().encode(signInput)
-  );
+        <footer>
+            <p>© <span id="year"></span> Santos • Todos os direitos reservados</p>
+        </footer>
+    </main>
 
-  const jwt = `${signInput}.${b64u(signature)}`;
+    <!-- Toast de aviso -->
+    <div id="toast" class="toast">Link copiado para a área de transferência!</div>
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt
-    })
-  });
+    <script>
+        // Atualiza o ano automaticamente
+        document.getElementById('year').textContent = new Date().getFullYear();
 
-  const json = await res.json();
-  if (!res.ok || !json.access_token) throw new Error(json.error_description || json.error || "Erro no OAuth2");
-  return json.access_token;
-}
+        // Função de partilha nativa ou cópia do link
+        function sharePage() {
+            const shareData = {
+                title: 'Santos | Cypher Hub',
+                text: 'Confere os meus projectos, apps e redes sociais:',
+                url: window.location.href
+            };
 
-async function handleSendPush() {
-  const btn = document.getElementById('sendPushBtn');
-  const log = document.getElementById('pushLog');
-  const title = document.getElementById('notifTitle').value.trim();
-  const body = document.getElementById('notifBody').value.trim();
-  const topic = document.getElementById('notifTopic').value.trim();
-
-  btn.disabled = true;
-  btn.textContent = "A Enviar...";
-  log.style.display = "none";
-
-  try {
-    const token = await getAccessToken(["https://www.googleapis.com/auth/firebase.messaging"]);
-    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${SA.project_id}/messages:send`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: {
-          notification: { title, body },
-          data: { TITLE: title, BODY: body },
-          android: { priority: "HIGH" },
-          topic: topic
+            if (navigator.share) {
+                navigator.share(shareData).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast();
+                });
+            }
         }
-      })
-    });
 
-    const json = await res.json();
-    log.style.display = "block";
-    if (res.ok) {
-      log.className = "log-box ok";
-      log.textContent = "✓ Notificação enviada com sucesso!";
-    } else {
-      log.className = "log-box err";
-      log.textContent = "⚠️ Erro: " + (json.error?.message || JSON.stringify(json));
-    }
-  } catch (err) {
-    log.style.display = "block";
-    log.className = "log-box err";
-    log.textContent = "⚠️ Erro: " + err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "DISPARAR NOTIFICAÇÃO";
-  }
-}
-
-async function handleReadFirestore() {
-  const btn = document.getElementById('readDbBtn');
-  const log = document.getElementById('dbLog');
-  const collection = document.getElementById('collName').value.trim();
-
-  btn.disabled = true;
-  btn.textContent = "A Aceder...";
-  log.style.display = "none";
-
-  try {
-    const token = await getAccessToken(["https://www.googleapis.com/auth/datastore"]);
-    const res = await fetch(`https://firestore.googleapis.com/v1/projects/${SA.project_id}/databases/(default)/documents/${collection}`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    const json = await res.json();
-    log.style.display = "block";
-    if (res.ok) {
-      log.className = "log-box ok";
-      log.textContent = JSON.stringify(json, null, 2);
-    } else {
-      log.className = "log-box err";
-      log.textContent = "⚠️ Erro: " + (json.error?.message || JSON.stringify(json));
-    }
-  } catch (err) {
-    log.style.display = "block";
-    log.className = "log-box err";
-    log.textContent = "⚠️ Erro: " + err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "LER DADOS";
-  }
-}
-</script>
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2800);
+        }
+    </script>
 </body>
 </html>
-
